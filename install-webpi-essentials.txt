@@ -1,0 +1,26 @@
+webpi
+
+$source = webpi
+IIS7
+ASPNET
+BasicAuthentication
+DefaultDocument
+DigestAuthentication
+DirectoryBrowse
+HTTPErrors
+HTTPLogging
+HTTPRedirection
+IIS7_ExtensionLessURLs
+IISManagementConsole
+IPSecurity
+ISAPIExtensions
+ISAPIFilters
+LoggingTools
+MetabaseAndIIS6Compatibility
+NETExtensibility
+RequestFiltering
+RequestMonitor
+StaticContent
+StaticContentCompression
+Tracing
+WindowsAuthentication
