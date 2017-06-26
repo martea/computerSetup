@@ -17,3 +17,6 @@ nodejs.install
 
 powershell
 pscx
+
+Discord
+Slack
