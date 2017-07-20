@@ -1,0 +1,253 @@
+Set-Alias ssh-agent "$env:ProgramFiles\git\usr\bin\ssh-agent.exe"
+Set-Alias ssh-add "$env:ProgramFiles\git\usr\bin\ssh-add.exe"
+Set-Alias editor code
+Set-Alias winmerge "${env:ProgramFiles(x86)}\winmerge\WinMergeU.exe"
+
+function URLACL-SHOW(){
+    netsh http show urlacl
+}
+function URLACL-ADD($serviceUrl){
+     netsh http add urlacl url=$serviceUrl user=everyone delegate=yes
+}
+
+function admin(){
+    Start-Process powershell -Verb runAs
+}
+
+function ping-google-stamp(){
+    ping www.google.com -t | %{ [DateTime]::Now.ToString("yyyy-MM-dd hh:mm:ss") +"  $($_.ToString())" }
+}
+function epi-guid(){
+    #clip should send the output to the clipboard
+
+    "[ContentType(GUID =""$(guid)"")]" | ForEach-Object{
+        Write-Host $_
+        Write-Host "Copied to clipboard"
+        $_
+        } | Clip
+}
+
+function Get-Lastest{
+ [cmdletbinding()]
+    param(
+        [Parameter(Position=0,Mandatory=$false,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true)]
+        [Int32]$noOfLogs
+        )
+    if(!$noOfLogs) {$noOfLogs = 1};
+    Get-EventLog -LogName Application  | Select-Object -Property Source,EntryType,Message -First $noOfLogs | Format-List
+}
+
+
+function LessC-Build-Emarvel-Styles($filter){
+    $lessCmd = Get-Childitem -Recurse -Filter *lessc.cmd* | Select-Object -First 1 -Property Fullname | ForEach-Object{$_.Fullname}
+    Get-ChildItem -Path */Content/ -Recurse -filter site*.less | Where-Object{$_.Directory.Name -like "*$($filter)*"} | ForEach-Object{
+        $from="$($_.Directory)\$($_.Name)"
+        $to="$($_.Directory)\$($_.Name.TrimEnd("less"))css"
+        Write-Host "Compiling ...$($_.Directory.Name,$_.Name)"
+        .$lessCmd $from $to --source-map-map-inline
+        Write-Host "Compiled"
+    }
+    Write-Host "Compilation complete"
+}
+#Stops windows update when you your irritated
+function Stop-Windows-Update-Service{Stop-Service wuauserv}
+#[Console]::OutputEncoding=[System.Text.Encoding]::UTF8
+# Open cwd in Windows Explorer
+function e {
+    explorer.exe .
+}
+
+
+#Git shortcuts
+function push(){
+    git fetch --all
+    git pull
+    git push
+}
+function master{
+    git fetch origin
+    git checkout master
+}
+function new-release($name){
+    $name = "release/$($name)"
+    git pull
+    git checkout -b "$($name)"
+    git push -u origin "$($name)"
+}
+
+function new-feature($name){
+    $name = "feature/$($name)"
+    git checkout -b "$($name)"
+    git push -u origin "$($name)"
+}
+function new-hotfix($name){
+    $name = "hotfix/$($name)"
+    git checkout -b "$($name)"
+    git push -u origin "$($name)"
+}
+
+function git-remove-localBranches{
+         Param(
+       [Parameter(Mandatory=$true)]
+       [string]$filter
+    )
+    git branch | select-string $filter | %{git branch ([string]$_).Trim() -d}
+}
+
+function glm{
+    Write-Host "Print git log with author as me and with oneline format"
+    git log --author="marten.andersson@starrepublic.com" --pretty=format:'%h %ad %s' --date=short }
+
+function glog{
+    Write-Host "Print git log and with oneline custom format"
+    git log --pretty=format:'%h %ad %s | %an' --date=short
+}
+function glvso ($no){
+    #Method is to pickup remote location
+    $file = Get-ChildItem -Path .\.git -Include config -Recurse | %{ Get-Content $_.Fullname}
+    $url = ([regex]"([a-zA-Z]+):\/\/([^:\/?#\s]+)+(:\d+)?(\/[^?#\s]+)?(\?[^#\s]+)?(#[^\s]+)?").match($file).Value
+    git log --format="%H" -$no | %{"$($url)/commit/$($_)"}
+}
+
+function gfs($sha){
+    git diff-tree --no-commit-id --name-only -r "$($sha)"
+
+}
+
+function gs {
+    git status
+}
+
+Function Git-Feature
+{
+     Param(
+       [Parameter(Mandatory=$true)]
+       [string]$featureName
+    )
+    $name = "feature/$($featureName)"
+    #creats new local branch
+    git checkout -b $name
+    #pushes the localbranch to the remote
+    git push -u origin $name
+}
+
+function fetch{
+    git fetch origin --prune
+}
+
+function gpu {
+    git push
+}
+function gpl {
+    git pull
+}
+function gco($message) {
+    git add . | Out-Host
+    git commit -am $message | Out-Host
+}
+function gsreset(){
+    git checkout -- .
+}
+function greset {
+    git reset head --hard
+}
+function gm {
+    git merge
+}
+function clear-merge-files(){
+    Get-ChildItem -Recurse -Include *.bak,*.orig | %{del $_.Fullname}
+    Write-Host "Mergefiles were removed from all places"
+}
+function buildLessExecute($file){
+    Push-Location $file.Directory.Fullname
+    ."$($file.Fullname)"
+    Pop-Location
+}
+
+function Close-Open-Windows(){
+#Closes all open applications those ignore are because of application restructions.
+(gps | ?{ $_.mainwindowtitle -ne "" -and $_.processname -ne "console" -and $_.processname -ne "powershell" -and $_.processname -ne "devenv" } ) | stop-process -ErrorAction Ignore
+#Close open shell windows
+(New-Object -ComObject Shell.Application).Windows() | Where-Object{$_.Fullname -ne $null -and $_.Fullname.ToLower().Endswith('\explorer.exe') -eq $true} | ForEach-Object{$_.Quit()}
+}
+
+function Edit-Powershell-Profile(){
+  editor "$($env:USERPROFILE)\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1"
+}
+function Edit-IISExpress-Application-Host(){
+  editor "$($env:USERPROFILE)\Documents\IISExpress\config\applicationhost.config"
+}
+function Edit-IIS-Application-Host(){
+  editor "$($env:SystemRoot)\System32\inetsrv\config\applicationhost.config"
+}
+function Edit-Host-Config(){
+  editor "$($env:SystemRoot)\System32\drivers\etc\hosts"
+}
+
+
+
+<#
+.synopsis
+Gets generated guids
+.description
+Get generated guids depending on the numbers of guids you want to do
+.Example
+guid 10
+#>
+function Get-Guid
+{
+    Param
+    (
+    [Parameter(Mandatory=$false,Position=0)]
+    $Param1
+    )
+    if($no){
+        for($i = 0; $i -lt $no; $i++){
+            [Guid]::NewGuid() | %{$_.Guid}
+        }
+     } else {
+            [Guid]::NewGuid() | %{$_.Guid}
+     }
+}
+function buildLess{
+    Get-ChildItem -Recurse -Include compileLess.ps1 | %{buildLessExecute($_)}
+}
+
+
+function findReg($arg){
+     Get-ChildItem -Recurse -ErrorAction SilentlyContinue | %{$_.Fullname} | ?{$_ -match $arg}
+}
+
+function vs-cmd(){
+ C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\Tools\VsDevCmd.bat
+}
+
+function add-acl($arg){
+    netsh http add urlacl "url=https://$($arg):443/" user=everyone
+    netsh http add urlacl "url=http://$($arg):80/" user=everyone
+}
+
+function RunOctopack(){
+    Get-Process *iisexpress* | Stop-Process
+    Write-Host "Stopped iis express instance"
+    Write-Host "Invoking msbuild..."
+    Invoke-MsBuild ((Get-ChildItem *sln | Select-Object -Property Name).Name) -ShowBuildOutputInNewWindow -PromptForInputBeforeClosing -Verbose -MsBuildParameters "/target:rebuild /property:RunOctoPack=true"
+}
+function Rebuild(){
+    Invoke-MsBuild ((Get-ChildItem *sln | Select-Object -Property Name).Name) -ShowBuildOutputInCurrentWindow -Verbose -MsBuildParameters "/target:rebuild"
+}
+
+function HostExpress(){
+    Invoke-MsBuild ((Get-ChildItem *sln | Select-Object -Property Name).Name) -ShowBuildOutputInCurrentWindow -Verbose -MsBuildParameters "/target:rebuild"
+     iisexpress /config:.vs\config\applicationhost.config
+}
+
+
+function ExportOctopusProject($name){
+    octo export --server=http://192.168.200.7/api --apiKey=API-UJRJWFYYGCJ8GFFQVAEY3COT3X0 --type=project --name="$($name)" --filePath=OD.json
+}
+
+# Load posh-git example profile
+. '$($env:USERPROFILE)\Documents\WindowsPowerShell\Modules\posh-git\profile.example.ps1'
+
+Set-Location $env:HOMEDRIVE\
