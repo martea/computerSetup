@@ -20,3 +20,7 @@ pscx
 
 Discord
 Slack
+
+ sharex
+ ditto
+ inkscape
